@@ -8,86 +8,84 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 REPO_URL="https://github.com/furik30/dwnld_bot.git"
-INSTALL_DIR="dwnld_bot"
+INSTALL_DIR="$HOME/dwnld_bot"
+BOT_DIR="$INSTALL_DIR/bot"
 
-echo -e "${CYAN}--- Установщик Telegram Downloader Bot ---${NC}"
+echo -e "${CYAN}==============================================${NC}"
+echo -e "${CYAN}    Telegram Downloader Bot - Установщик      ${NC}"
+echo -e "${CYAN}==============================================${NC}"
 
-# Проверка наличия Git
+# 1. Проверки окружения
 if ! command -v git &> /dev/null; then
-    echo -e "${RED}Ошибка: git не установлен. Пожалуйста, установите git.${NC}"
+    echo -e "${RED}Ошибка: git не установлен.${NC}"
     exit 1
 fi
 
-# Проверка наличия Docker
 if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Ошибка: docker не установлен. Пожалуйста, установите docker.${NC}"
-    echo -e "${YELLOW}Подсказка: curl -fsSL https://get.docker.com | sh${NC}"
-    exit 1
+    echo -e "${YELLOW}Docker не найден. Устанавливаю...${NC}"
+    curl -fsSL https://get.docker.com | sh
 fi
 
-# Определение режима работы: клон или локальная настройка
-if [ -f "downloader.sh" ] && [ -f "docker-compose.yml" ]; then
-    echo -e "${GREEN}Обнаружены файлы проекта. Запускаю настройку в текущей директории...${NC}"
+# 2. Клонирование или переход в папку
+if [ -d "$INSTALL_DIR/.git" ]; then
+    echo -e "${GREEN}Проект уже склонирован в $INSTALL_DIR. Обновляем...${NC}"
+    cd "$INSTALL_DIR" && git pull
 else
-    echo -e "${YELLOW}Файлы проекта не найдены. Клонирую репозиторий...${NC}"
-    if [ -d "$INSTALL_DIR" ]; then
-        echo -e "${RED}Директория $INSTALL_DIR уже существует. Пожалуйста, удалите её или перейдите в неё.${NC}"
-        exit 1
-    fi
+    echo -e "${YELLOW}Клонирование репозитория в $INSTALL_DIR...${NC}"
     git clone "$REPO_URL" "$INSTALL_DIR"
-    cd "$INSTALL_DIR" || exit 1
+    cd "$INSTALL_DIR"
 fi
 
-# Настройка .env
-echo -e "\n${CYAN}--- Настройка конфигурации ---${NC}"
-if [ ! -f .env ]; then
-    if [ -f .env.example ]; then
-        cp .env.example .env
-        echo -e "${GREEN}Файл .env создан из шаблона.${NC}"
+# 3. Настройка .env внутри папки bot/
+echo -e "\n${CYAN}--- Настройка параметров .env ---${NC}"
+if [ ! -f "$BOT_DIR/.env" ]; then
+    if [ -f "$BOT_DIR/.env.example" ]; then
+        cp "$BOT_DIR/.env.example" "$BOT_DIR/.env"
     else
-        echo -e "${RED}Ошибка: .env.example не найден!${NC}"
-        touch .env
+        touch "$BOT_DIR/.env"
     fi
-else
-    echo -e "${YELLOW}Файл .env уже существует. Пропускаем создание.${NC}"
 fi
 
-# Интерактивный ввод данных, если значения пусты
-read_var() {
-    local var_name=$1
-    local prompt=$2
-    local current_val=$(grep "^${var_name}=" .env | cut -d'=' -f2-)
-
-    # Если значение пустое или отсутствует
-    if [ -z "$current_val" ]; then
-        read -p "$prompt: " input_val
-        if [ ! -z "$input_val" ]; then
-            # Экранируем спецсимволы для sed
-            # Простое добавление или замена
-            if grep -q "^${var_name}=" .env; then
-                sed -i "s|^${var_name}=.*|${var_name}=${input_val}|" .env
+read_val() {
+    local var=$1
+    local msg=$2
+    local current=$(grep "^$var=" "$BOT_DIR/.env" | cut -d'=' -f2-)
+    
+    if [ -z "$current" ]; then
+        echo -n -e "${YELLOW}$msg: ${NC}"
+        read input
+        if [ ! -z "$input" ]; then
+            # Используем | как разделитель в sed, так как токены могут содержать /
+            if grep -q "^$var=" "$BOT_DIR/.env"; then
+                sed -i "s|^$var=.*|$var=$input|" "$BOT_DIR/.env"
             else
-                echo "${var_name}=${input_val}" >> .env
+                echo "$var=$input" >> "$BOT_DIR/.env"
             fi
         fi
     fi
 }
 
-echo -e "${YELLOW}Проверка переменных окружения... (Нажмите Enter, чтобы пропустить, если уже заполнено)${NC}"
-read_var "TELEGRAM_TOKEN" "Введите Telegram Bot Token"
-read_var "API_ID" "Введите API ID (my.telegram.org)"
-read_var "API_HASH" "Введите API HASH (my.telegram.org)"
-read_var "OWNER_ID" "Введите ваш Telegram User ID (для админки)"
+read_val "TELEGRAM_TOKEN" "Введите токен бота (@BotFather)"
+read_val "API_ID" "Введите API ID (my.telegram.org)"
+read_val "API_HASH" "Введите API HASH (my.telegram.org)"
+read_val "OWNER_ID" "Введите ваш Telegram User ID (для админки)"
 
-# Проверка прав на выполнение скриптов
-chmod +x downloader.sh
-chmod +x install.sh
-if [ -f update.sh ]; then chmod +x update.sh; fi
+# 4. Настройка Alias (теперь путь включает /bot/)
+echo -e "\n${CYAN}--- Настройка быстрого доступа (alias) ---${NC}"
+SHELL_RC=""
+if [ -f "$HOME/.bashrc" ]; then SHELL_RC="$HOME/.bashrc";
+elif [ -f "$HOME/.zshrc" ]; then SHELL_RC="$HOME/.zshrc"; fi
 
-echo -e "\n${GREEN}Настройка завершена!${NC}"
-echo -e "${CYAN}Запускаю бота...${NC}"
+if [ ! -z "$SHELL_RC" ]; then
+    if ! grep -q "alias downloader=" "$SHELL_RC"; then
+        echo "alias downloader='bash $BOT_DIR/downloader.sh'" >> "$SHELL_RC"
+        echo -e "${GREEN}Alias 'downloader' добавлен в $SHELL_RC${NC}"
+        echo -e "${YELLOW}Чтобы алиас заработал прямо сейчас, выполните: source $SHELL_RC${NC}"
+    fi
+fi
 
-./downloader.sh up
+# 5. Права доступа на скрипты в папке bot/
+chmod +x "$BOT_DIR/downloader.sh" "$BOT_DIR/update.sh" "$BOT_DIR/uninstall.sh" 2>/dev/null || true
 
-echo -e "\n${GREEN}Бот должен быть запущен!${NC}"
-echo -e "Используйте ${YELLOW}./downloader.sh logs${NC} для просмотра логов."
+echo -e "\n${GREEN}Установка завершена!${NC}"
+echo -e "Теперь вы можете управлять ботом командой: ${CYAN}downloader up${NC}"
