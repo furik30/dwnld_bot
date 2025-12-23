@@ -5,3 +5,4 @@ instaloader
 psutil
 python-dotenv
 pyyaml
+curl_cffi
