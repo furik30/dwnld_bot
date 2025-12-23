@@ -45,12 +45,12 @@ async def start_handler(client: Client, message: Message):
             return
 
     # Обычный старт
-    await message.reply_html(
+    await message.reply_text(
         get_message("start", bot_username=client.me.username, owner_username=os.getenv("OWNER_USERNAME", "неизвестен"))
     )
 
 async def help_handler(client: Client, message: Message):
-    await message.reply_markdown(
+    await message.reply_text(
         get_message("help",
                     bot_username=client.me.username,
                     owner_username=os.getenv("OWNER_USERNAME", "неизвестен"),

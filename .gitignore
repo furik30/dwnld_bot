@@ -13,6 +13,9 @@ venv/
 # Downloads
 downloads/
 
-# Cookies
-*.txt
+# Logs and data
 archive/
+data/
+logs/
+*.txt
+!requirements.txt

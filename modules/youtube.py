@@ -1,6 +1,4 @@
 import os
-import glob
-import shutil
 import yt_dlp
 from pyrogram import Client
 from pyrogram.types import Message

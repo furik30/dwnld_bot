@@ -12,4 +12,4 @@ services:
       - ./config:/app/config
       - ./instagram_cookies.txt:/app/instagram_cookies.txt
       - ./youtube_cookies.txt:/app/youtube_cookies.txt
-    user: "${UID}:${GID}"
+    user: "${USER_ID}:${GROUP_ID}"
