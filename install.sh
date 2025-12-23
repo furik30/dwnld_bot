@@ -7,15 +7,18 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+# Настройки репозитория
 REPO_URL="https://github.com/furik30/dwnld_bot.git"
-INSTALL_DIR="$HOME/dwnld_bot"
+BRANCH="dev"
+INSTALL_DIR="$HOME/downloader"
 BOT_DIR="$INSTALL_DIR/bot"
 
 echo -e "${CYAN}==============================================${NC}"
 echo -e "${CYAN}    Telegram Downloader Bot - Установщик      ${NC}"
+echo -e "${CYAN}    (Ветка: $BRANCH | Папка: $INSTALL_DIR)    ${NC}"
 echo -e "${CYAN}==============================================${NC}"
 
-# 1. Проверки окружения
+# 1. Проверки зависимостей
 if ! command -v git &> /dev/null; then
     echo -e "${RED}Ошибка: git не установлен.${NC}"
     exit 1
@@ -26,17 +29,25 @@ if ! command -v docker &> /dev/null; then
     curl -fsSL https://get.docker.com | sh
 fi
 
-# 2. Клонирование или переход в папку
+# 2. Умное клонирование (Sparse Checkout)
 if [ -d "$INSTALL_DIR/.git" ]; then
-    echo -e "${GREEN}Проект уже склонирован в $INSTALL_DIR. Обновляем...${NC}"
-    cd "$INSTALL_DIR" && git pull
-else
-    echo -e "${YELLOW}Клонирование репозитория в $INSTALL_DIR...${NC}"
-    git clone "$REPO_URL" "$INSTALL_DIR"
+    echo -e "${GREEN}Проект уже существует. Обновляем...${NC}"
     cd "$INSTALL_DIR"
+    git fetch origin "$BRANCH"
+    git checkout "$BRANCH"
+    git pull origin "$BRANCH"
+else
+    echo -e "${YELLOW}Клонирование папки bot из ветки $BRANCH...${NC}"
+    # Клонируем без скачивания файлов
+    git clone -b "$BRANCH" --no-checkout "$REPO_URL" "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+    # Настраиваем получение только папки bot
+    git sparse-checkout init --cone
+    git sparse-checkout set bot
+    git checkout "$BRANCH"
 fi
 
-# 3. Настройка .env внутри папки bot/
+# 3. Настройка .env
 echo -e "\n${CYAN}--- Настройка параметров .env ---${NC}"
 if [ ! -f "$BOT_DIR/.env" ]; then
     if [ -f "$BOT_DIR/.env.example" ]; then
@@ -55,7 +66,6 @@ read_val() {
         echo -n -e "${YELLOW}$msg: ${NC}"
         read input
         if [ ! -z "$input" ]; then
-            # Используем | как разделитель в sed, так как токены могут содержать /
             if grep -q "^$var=" "$BOT_DIR/.env"; then
                 sed -i "s|^$var=.*|$var=$input|" "$BOT_DIR/.env"
             else
@@ -66,26 +76,26 @@ read_val() {
 }
 
 read_val "TELEGRAM_TOKEN" "Введите токен бота (@BotFather)"
-read_val "API_ID" "Введите API ID (my.telegram.org)"
-read_val "API_HASH" "Введите API HASH (my.telegram.org)"
-read_val "OWNER_ID" "Введите ваш Telegram User ID (для админки)"
+read_val "API_ID" "Введите API ID"
+read_val "API_HASH" "Введите API HASH"
+read_val "OWNER_ID" "Введите ваш Telegram User ID"
 
-# 4. Настройка Alias (теперь путь включает /bot/)
-echo -e "\n${CYAN}--- Настройка быстрого доступа (alias) ---${NC}"
+# 4. Создание алиаса
+echo -e "\n${CYAN}--- Настройка алиаса 'downloader' ---${NC}"
 SHELL_RC=""
-if [ -f "$HOME/.bashrc" ]; then SHELL_RC="$HOME/.bashrc";
-elif [ -f "$HOME/.zshrc" ]; then SHELL_RC="$HOME/.zshrc"; fi
+[ -f "$HOME/.bashrc" ] && SHELL_RC="$HOME/.bashrc"
+[ -f "$HOME/.zshrc" ] && SHELL_RC="$HOME/.zshrc"
 
 if [ ! -z "$SHELL_RC" ]; then
     if ! grep -q "alias downloader=" "$SHELL_RC"; then
         echo "alias downloader='bash $BOT_DIR/downloader.sh'" >> "$SHELL_RC"
-        echo -e "${GREEN}Alias 'downloader' добавлен в $SHELL_RC${NC}"
-        echo -e "${YELLOW}Чтобы алиас заработал прямо сейчас, выполните: source $SHELL_RC${NC}"
+        echo -e "${GREEN}Алиас добавлен в $SHELL_RC${NC}"
+        echo -e "${YELLOW}Для активации выполните: source $SHELL_RC${NC}"
     fi
 fi
 
-# 5. Права доступа на скрипты в папке bot/
+# 5. Права на запуск
 chmod +x "$BOT_DIR/downloader.sh" "$BOT_DIR/update.sh" "$BOT_DIR/uninstall.sh" 2>/dev/null || true
 
 echo -e "\n${GREEN}Установка завершена!${NC}"
-echo -e "Теперь вы можете управлять ботом командой: ${CYAN}downloader up${NC}"
+echo -e "Запустите бота командой: ${CYAN}downloader up${NC}"

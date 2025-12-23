@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Путь к директории бота (определяется автоматически)
+# Определяем папку, где лежит сам скрипт
 BOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$BOT_DIR"
 
@@ -11,18 +11,17 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Экспорт ID для Docker
+# Данные для Docker
 export USER_ID=$(id -u)
 export GROUP_ID=$(id -g)
 
 usage() {
-    echo -e "${CYAN}Использование: downloader [команда]${NC}"
-    echo "  up        - Запустить бота (в фоне)"
-    echo "  down      - Остановить бота"
+    echo -e "${CYAN}Downloader CLI. Использование: downloader [команда]${NC}"
+    echo "  up        - Собрать и запустить бота"
+    echo "  down      - Остановить"
     echo "  restart   - Перезагрузить"
-    echo "  logs      - Посмотреть логи (-f)"
-    echo "  status    - Состояние контейнеров"
-    echo "  update    - Обновить код и пересобрать"
+    echo "  logs      - Просмотр логов (-f)"
+    echo "  update    - Обновить код из ветки dev"
     echo "  edit      - Редактировать .env"
     echo "  uninstall - Полное удаление проекта"
 }
@@ -30,7 +29,7 @@ usage() {
 case "$1" in
     up)
         docker compose up -d --build
-        echo -e "${GREEN}Бот запущен в фоне.${NC}"
+        echo -e "${GREEN}Бот запущен.${NC}"
         ;;
     down)
         docker compose down
@@ -38,20 +37,15 @@ case "$1" in
         ;;
     restart)
         docker compose restart
-        echo -e "${GREEN}Бот перезагружен.${NC}"
         ;;
     logs)
         docker compose logs -f --tail=100
         ;;
-    status)
-        docker compose ps
-        ;;
     update)
-        bash update.sh "$2"
+        bash update.sh
         ;;
     edit)
         ${EDITOR:-nano} .env
-        echo -e "${YELLOW}Не забудьте выполнить 'downloader up' для применения правок.${NC}"
         ;;
     uninstall)
         bash uninstall.sh
