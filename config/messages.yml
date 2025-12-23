@@ -1,0 +1,66 @@
+start: |
+  🎶 <b>Welcome! I am a music and video downloader bot.</b>
+
+  <b>How to use:</b>
+  1. Send me a song name to search.
+  2. Or send a link to a video from TikTok, Instagram Reels, or a playlist from YouTube/SoundCloud.
+
+  <b>Inline mode:</b>
+  Type my name (<code>@{bot_username}</code>) in any chat followed by your query or link.
+
+  Owner: {owner_username}
+
+help: |
+  **How to use the bot:**
+
+  🎵 **Music Search & Download:**
+     - Just send me the song name (e.g., "Blinding Lights").
+     - I will offer 5 options with download buttons.
+
+  📹 **Video & Playlist Download:**
+     - Send a link to a video from TikTok, Instagram Reels.
+     - Send a link to a playlist from YouTube or SoundCloud.
+
+  🤖 **Inline Mode:**
+     - Type `@{bot_username}` in any chat followed by a song name or link.
+     - Click the result to switch to my chat for downloading.
+
+  **Limits:**
+  - Max duration: **{max_duration} minutes**.
+  - Max playlist items: **{max_playlist_items}**.
+
+  Owner: {owner_username}
+
+errors:
+  generic: "❌ An error occurred. Please try again later."
+  search_failed: "❌ Search failed."
+  no_results: "❌ No results found for your query."
+  duration_limit: "❌ Video is too long ({duration}s > {max_duration}s)."
+  instagram_limit: "❌ Instagram temporarily limited access. Try again later."
+  download_failed: "❌ Failed to download or send the file."
+  invalid_link: "❌ Invalid or outdated download link."
+  unknown_link: "❌ Unknown link type."
+
+downloads:
+  searching: "🔎 Searching for \"{query}\"..."
+  analyzing_playlist: "🔎 Analyzing playlist from {platform}..."
+  playlist_found: "✅ Found playlist with {count} tracks. Starting download..."
+  downloading_track: "🚀 Downloading track..."
+  downloading_video: "🚀 Downloading video..."
+  sending_file: "📤 Sending file..."
+  download_start: "✅ Selected. Starting download..."
+  playlist_track: "Downloading track {current}/{total}: {title}"
+  playlist_track_skipped: "⚠️ Track '{title}' skipped: longer than {max_duration} minutes."
+  playlist_track_error: "❌ Failed to download track '{title}'."
+  caption: "Downloaded with @{bot_username}"
+
+admin:
+  panel: "🔐 **Admin Panel**\nSelect an action:"
+  access_denied: "⛔️ Access denied."
+  logs_header: "📄 **Last 20 log lines:**\n\n"
+  logs_empty: "Logs are empty."
+  status: |
+    📊 **System Status**
+
+    Active Threads: {threads}
+    Memory Usage: {memory_usage} MB

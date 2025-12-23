@@ -1,44 +1,82 @@
-[EN](READMEs/README_en.md)
-
 # Telegram Downloader Bot
 
-Это Telegram-бот, который позволяет загружать музыку и видео с различных платформ, таких как YouTube, TikTok, Instagram Reels и SoundCloud.
+A powerful Telegram bot to download music and videos from YouTube, Instagram (Reels), TikTok, and SoundCloud.
+Refactored for speed (Pyrogram), modularity, and ease of deployment (Docker).
 
-## Функции
+## Features
 
-- Поиск и загрузка музыки с YouTube.
-- Загрузка видео с TikTok, Instagram Reels и YouTube.
-- Загрузка плейлистов с YouTube и SoundCloud.
-- Инлайновый режим для быстрого поиска и загрузки.
+- 🎵 **Music**: Search and download from YouTube (MP3).
+- 📹 **Video**: Download from YouTube, TikTok, Instagram Reels.
+- 📦 **Playlists**: Support for YouTube and SoundCloud playlists.
+- 🚀 **Fast**: Built on Pyrogram (MTProto).
+- 🐳 **Dockerized**: Easy to deploy with Docker Compose.
+- 🛠 **CLI**: `downloader.sh` for easy management.
+- 🍪 **Cookies**: Support for Instagram and YouTube cookies to bypass restrictions.
+- 🔐 **Admin Panel**: View logs and status directly in Telegram.
+- 🔗 **Deep Links**: Shareable links for videos.
 
-## Установка
+## Prerequisites
 
-1.  **Клонируйте репозиторий:**
+- Docker & Docker Compose
+- Telegram Bot Token (@BotFather)
+- Telegram API ID & Hash (https://my.telegram.org)
+
+## Installation
+
+1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/furik30/dwnld_bot
+    git clone https://github.com/yourusername/dwnld_bot.git
+    cd dwnld_bot
     ```
 
-2.  **Запустите установщик:**
-    Это создаст виртуальное окружение, установит зависимости и создаст файл `.env` для вас.
+2.  **Configuration:**
+    -   Copy `.env.example` to `.env` (or let the script do it).
+    -   Edit `.env` and fill in your credentials.
     ```bash
-    bash install.sh
+    ./downloader.sh edit-env
     ```
 
-3.  **Конфигурация:**
-    -   Откройте вновь созданный файл `.env`.
-    -   Заполните ваш `TELEGRAM_TOKEN` от BotFather.
-    -   При желании установите `OWNER_USERNAME` и `INSTAGRAM_USERNAME`.
+3.  **Cookies (Optional but Recommended):**
+    -   **Instagram**: Export cookies in Netscape format (using extensions like "Get cookies.txt LOCALLY") and save as `instagram_cookies.txt` in the root folder.
+    -   **YouTube**: Similarly, save `youtube_cookies.txt` in the root folder to bypass age restrictions.
 
-4.  **Запуск бота:**
+4.  **Run the bot:**
     ```bash
-    source venv/bin/activate
-    python dwnld_bot/dwnld_bot.py
+    ./downloader.sh up
     ```
 
-## Файлы куки
+## Usage
 
--   `youtube_cookies.txt`: Используется `yt-dlp` для обхода возрастных ограничений и других ограничений на YouTube.
--   `instagram_cookies.txt`: Требуется для загрузки Instagram Reels. Подробности см. в [READMEs/README_INSTAGRAM.md](READMEs/README_INSTAGRAM.md).
-## Лицензия
+- **/start**: Start the bot.
+- **Search**: Send any text to search for a song.
+- **Links**: Send a link from supported platforms (YouTube, Instagram, TikTok, SoundCloud) to download.
+- **Inline**: Type `@YourBotUsername query` in any chat.
 
-Этот проект распространяется под лицензией MIT [LICENSE](LICENSE).
+### Admin Commands
+
+- **/admin** or **/logs**: Open the admin panel (only for `OWNER_ID`).
+    -   **Logs**: View last 20 log lines.
+    -   **Status**: View system memory usage and active threads.
+    -   **Errors**: View only error logs.
+
+## CLI Commands (`./downloader.sh`)
+
+- `up`: Start bot in background.
+- `down`: Stop bot.
+- `logs [n]`: View logs (tail).
+- `restart`: Restart bot.
+- `update`: Pull git changes and rebuild.
+- `status`: Check container status.
+
+## Project Structure
+
+- `main.py`: Entry point.
+- `modules/`: Bot handlers (youtube, instagram, admin).
+- `utils/`: Helper functions (logger, storage, messages).
+- `config/`: Configuration files (messages.yml).
+- `data/`: Persistent data (deep links, session files).
+- `downloads/`: Temporary download folder.
+
+## License
+
+MIT

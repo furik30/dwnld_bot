@@ -1,0 +1,15 @@
+services:
+  downloader_bot:
+    build: .
+    container_name: downloader_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./downloads:/app/downloads
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./instagram_cookies.txt:/app/instagram_cookies.txt
+      - ./youtube_cookies.txt:/app/youtube_cookies.txt
+    user: "${UID}:${GID}"
