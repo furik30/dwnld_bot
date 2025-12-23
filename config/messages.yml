@@ -1,66 +1,66 @@
 start: |
-  🎶 <b>Welcome! I am a music and video downloader bot.</b>
+  🎶 <b>Добро пожаловать! Я бот для скачивания музыки и видео.</b>
 
-  <b>How to use:</b>
-  1. Send me a song name to search.
-  2. Or send a link to a video from TikTok, Instagram Reels, or a playlist from YouTube/SoundCloud.
+  <b>Как пользоваться:</b>
+  1. Отправьте мне название песни для поиска.
+  2. Или отправьте ссылку на видео из TikTok, Instagram Reels, или плейлист с YouTube/SoundCloud.
 
-  <b>Inline mode:</b>
-  Type my name (<code>@{bot_username}</code>) in any chat followed by your query or link.
+  <b>Инлайн-режим:</b>
+  Напишите мое имя (<code>@{bot_username}</code>) в любом чате, а затем ваш запрос или ссылку.
 
-  Owner: {owner_username}
+  Владелец: {owner_username}
 
 help: |
-  **How to use the bot:**
+  **Как пользоваться ботом:**
 
-  🎵 **Music Search & Download:**
-     - Just send me the song name (e.g., "Blinding Lights").
-     - I will offer 5 options with download buttons.
+  🎵 **Поиск и скачивание музыки:**
+     - Просто отправьте мне название песни (например, "Blinding Lights").
+     - Я предложу 5 вариантов с кнопками для скачивания.
 
-  📹 **Video & Playlist Download:**
-     - Send a link to a video from TikTok, Instagram Reels.
-     - Send a link to a playlist from YouTube or SoundCloud.
+  📹 **Скачивание видео и плейлистов:**
+     - Отправьте ссылку на видео из TikTok, Instagram Reels.
+     - Отправьте ссылку на плейлист из YouTube или SoundCloud.
 
-  🤖 **Inline Mode:**
-     - Type `@{bot_username}` in any chat followed by a song name or link.
-     - Click the result to switch to my chat for downloading.
+  🤖 **Инлайн-режим:**
+     - Введите `@{bot_username}` в любом чате и через пробел название песни или ссылку.
+     - Нажмите на результат, чтобы перейти ко мне в чат для скачивания файла.
 
-  **Limits:**
-  - Max duration: **{max_duration} minutes**.
-  - Max playlist items: **{max_playlist_items}**.
+  **Ограничения:**
+  - Макс. длительность: **{max_duration} минут**.
+  - Макс. треков в плейлисте: **{max_playlist_items}**.
 
-  Owner: {owner_username}
+  Владелец: {owner_username}
 
 errors:
-  generic: "❌ An error occurred. Please try again later."
-  search_failed: "❌ Search failed."
-  no_results: "❌ No results found for your query."
-  duration_limit: "❌ Video is too long ({duration}s > {max_duration}s)."
-  instagram_limit: "❌ Instagram temporarily limited access. Try again later."
-  download_failed: "❌ Failed to download or send the file."
-  invalid_link: "❌ Invalid or outdated download link."
-  unknown_link: "❌ Unknown link type."
+  generic: "❌ Произошла ошибка. Пожалуйста, попробуйте позже."
+  search_failed: "❌ Поиск не удался."
+  no_results: "❌ По вашему запросу ничего не найдено."
+  duration_limit: "❌ Видео слишком длинное ({duration}с > {max_duration}с)."
+  instagram_limit: "❌ Instagram временно ограничил доступ. Попробуйте позже."
+  download_failed: "❌ Не удалось скачать или отправить файл."
+  invalid_link: "❌ Неверная или устаревшая ссылка для скачивания."
+  unknown_link: "❌ Неизвестный тип ссылки."
 
 downloads:
-  searching: "🔎 Searching for \"{query}\"..."
-  analyzing_playlist: "🔎 Analyzing playlist from {platform}..."
-  playlist_found: "✅ Found playlist with {count} tracks. Starting download..."
-  downloading_track: "🚀 Downloading track..."
-  downloading_video: "🚀 Downloading video..."
-  sending_file: "📤 Sending file..."
-  download_start: "✅ Selected. Starting download..."
-  playlist_track: "Downloading track {current}/{total}: {title}"
-  playlist_track_skipped: "⚠️ Track '{title}' skipped: longer than {max_duration} minutes."
-  playlist_track_error: "❌ Failed to download track '{title}'."
-  caption: "Downloaded with @{bot_username}"
+  searching: "🔎 Ищу \"{query}\"..."
+  analyzing_playlist: "🔎 Анализирую плейлист из {platform}..."
+  playlist_found: "✅ Найден плейлист из {count} треков. Начинаю загрузку..."
+  downloading_track: "🚀 Скачиваю трек..."
+  downloading_video: "🚀 Скачиваю видео..."
+  sending_file: "📤 Отправляю файл..."
+  download_start: "✅ Выбрано. Начинаю загрузку..."
+  playlist_track: "Скачиваю трек {current}/{total}: {title}"
+  playlist_track_skipped: "⚠️ Трек '{title}' пропущен: длиннее {max_duration} минут."
+  playlist_track_error: "❌ Не удалось скачать трек '{title}'."
+  caption: "Скачано с помощью @{bot_username}"
 
 admin:
-  panel: "🔐 **Admin Panel**\nSelect an action:"
-  access_denied: "⛔️ Access denied."
-  logs_header: "📄 **Last 20 log lines:**\n\n"
-  logs_empty: "Logs are empty."
+  panel: "🔐 **Админ-панель**\nВыберите действие:"
+  access_denied: "⛔️ Доступ запрещен."
+  logs_header: "📄 **Последние 20 строк логов:**\n\n"
+  logs_empty: "Логи пусты."
   status: |
-    📊 **System Status**
+    📊 **Статус системы**
 
-    Active Threads: {threads}
-    Memory Usage: {memory_usage} MB
+    Активные потоки: {threads}
+    Использование памяти: {memory_usage} MB

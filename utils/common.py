@@ -4,7 +4,7 @@ import re
 from urllib.parse import urlparse
 
 async def run_blocking(func, *args, **kwargs):
-    """Runs a blocking function in a separate thread."""
+    """Запускает блокирующую функцию в отдельном потоке."""
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, functools.partial(func, *args, **kwargs))
 

@@ -12,12 +12,10 @@ from modules.admin import admin_command, admin_callback
 
 def main():
     if not TELEGRAM_TOKEN:
-        logger.error("TELEGRAM_TOKEN is not set.")
+        logger.error("TELEGRAM_TOKEN не установлен.")
         return
 
-    # Initialize Client
-    # We use a persistent session in 'data/' folder if needed, or just memory if using Bot Token only
-    # Pyrogram creates a .session file. Let's put it in data/
+    # Инициализация клиента
     if not os.path.exists('data'):
         os.makedirs('data')
 
@@ -28,20 +26,20 @@ def main():
         bot_token=TELEGRAM_TOKEN
     )
 
-    # Register Handlers
+    # Регистрация обработчиков
     app.add_handler(MessageHandler(start_handler, filters.command("start")))
     app.add_handler(MessageHandler(help_handler, filters.command("help")))
 
-    # Admin Handlers
+    # Обработчики админа
     app.add_handler(MessageHandler(admin_command, filters.command(["admin", "logs"])))
     app.add_handler(CallbackQueryHandler(admin_callback, filters.regex("^admin_")))
 
-    # User Handlers
+    # Пользовательские обработчики
     app.add_handler(MessageHandler(text_handler, filters.text & ~filters.command("start") & ~filters.command("help")))
     app.add_handler(CallbackQueryHandler(button_callback, filters.regex("^download_")))
     app.add_handler(InlineQueryHandler(inline_query_handler))
 
-    logger.info("Starting bot...")
+    logger.info("Запуск бота...")
     app.run()
 
 if __name__ == "__main__":

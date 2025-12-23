@@ -5,7 +5,7 @@ from utils.logger import logger
 from config import MESSAGES_FILE
 
 class MessageLoader:
-    """Service for loading messages from YAML file"""
+    """Сервис для загрузки сообщений из YAML файла"""
 
     def __init__(self, config_path: str = MESSAGES_FILE):
         self.config_path = config_path
@@ -14,46 +14,46 @@ class MessageLoader:
         self.load_messages()
 
     def load_messages(self) -> None:
-        """Loads messages from YAML file"""
+        """Загружает сообщения из YAML файла"""
         try:
             if not os.path.exists(self.config_path):
-                logger.error(f"Messages file not found: {self.config_path}")
+                logger.error(f"Файл сообщений не найден: {self.config_path}")
                 self._messages = {}
                 return
 
             with open(self.config_path, 'r', encoding='utf-8') as file:
                 self._messages = yaml.safe_load(file) or {}
                 self._last_modified = os.path.getmtime(self.config_path)
-                logger.info(f"Messages loaded from {self.config_path}")
+                logger.info(f"Сообщения загружены из {self.config_path}")
 
         except Exception as e:
-            logger.error(f"Error loading messages: {e}")
+            logger.error(f"Ошибка при загрузке сообщений: {e}")
             self._messages = {}
 
     def _check_and_reload(self) -> None:
-        """Checks for file changes and reloads if necessary"""
+        """Проверяет изменения файла и перезагружает при необходимости"""
         try:
             if os.path.exists(self.config_path):
                 current_modified = os.path.getmtime(self.config_path)
                 if current_modified > self._last_modified:
-                    logger.info("Messages file changed, reloading...")
+                    logger.info("Обнаружены изменения в файле сообщений, перезагрузка...")
                     self.load_messages()
         except Exception as e:
-            logger.error(f"Error checking file changes: {e}")
+            logger.error(f"Ошибка при проверке изменений файла: {e}")
 
     def get_message(self, key_path: str, **kwargs) -> str:
         """
-        Retrieves a message by key path and formats it
+        Получает сообщение по пути ключа и форматирует его
 
         Args:
-            key_path: Path to the message (e.g., "sections.profile.content")
-            **kwargs: Parameters for formatting the message
+            key_path: Путь к сообщению (например, "sections.profile.content")
+            **kwargs: Параметры для форматирования сообщения
 
         Returns:
-            Formatted message string
+            Отформатированное сообщение
         """
         try:
-            # Check for file changes and reload if necessary
+            # Проверяем время изменения файла и перезагружаем при необходимости
             self._check_and_reload()
 
             keys = key_path.split('.')
@@ -63,28 +63,28 @@ class MessageLoader:
                 if isinstance(message, dict) and key in message:
                     message = message[key]
                 else:
-                    logger.warning(f"Key not found: {key_path}")
-                    return f"Message not found: {key_path}"
+                    logger.warning(f"Ключ не найден: {key_path}")
+                    return f"Сообщение не найдено: {key_path}"
 
             if isinstance(message, str):
                 return message.format(**kwargs) if kwargs else message
             else:
-                logger.warning(f"Value at {key_path} is not a string")
+                logger.warning(f"Значение по ключу {key_path} не является строкой")
                 return str(message)
 
         except Exception as e:
-            logger.error(f"Error getting message {key_path}: {e}")
-            return f"Error loading message: {key_path}"
+            logger.error(f"Ошибка при получении сообщения {key_path}: {e}")
+            return f"Ошибка загрузки сообщения: {key_path}"
 
     def get_section(self, section_path: str) -> Dict[str, Any]:
         """
-        Retrieves a whole section of messages
+        Получает целую секцию сообщений
 
         Args:
-            section_path: Path to the section (e.g., "sections.profile")
+            section_path: Путь к секции (например, "sections.profile")
 
         Returns:
-            Dictionary with section messages
+            Словарь с сообщениями секции
         """
         try:
             keys = section_path.split('.')
@@ -94,32 +94,32 @@ class MessageLoader:
                 if isinstance(section, dict) and key in section:
                     section = section[key]
                 else:
-                    logger.warning(f"Section not found: {section_path}")
+                    logger.warning(f"Секция не найдена: {section_path}")
                     return {}
 
             return section if isinstance(section, dict) else {}
 
         except Exception as e:
-            logger.error(f"Error getting section {section_path}: {e}")
+            logger.error(f"Ошибка при получении секции {section_path}: {e}")
             return {}
 
     def reload_messages(self) -> None:
-        """Reloads messages from file"""
-        logger.info("Reloading messages")
+        """Перезагружает сообщения из файла"""
+        logger.info("Перезагрузка сообщений")
         self.load_messages()
 
-# Create global instance of message loader
+# Создаем глобальный экземпляр загрузчика сообщений
 message_loader = MessageLoader()
 
-# Helper functions for quick access
+# Удобные функции для быстрого доступа к сообщениям
 def get_message(key_path: str, **kwargs) -> str:
-    """Get message by key"""
+    """Получить сообщение по ключу"""
     return message_loader.get_message(key_path, **kwargs)
 
 def get_section(section_path: str) -> Dict[str, Any]:
-    """Get section of messages"""
+    """Получить секцию сообщений"""
     return message_loader.get_section(section_path)
 
 def reload_messages() -> None:
-    """Reload messages"""
+    """Перезагрузить сообщения"""
     message_loader.reload_messages()

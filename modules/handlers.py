@@ -12,14 +12,14 @@ from utils.messages import get_message
 from modules.youtube import search_youtube, download_audio, download_video, handle_playlist
 from modules.instagram import download_instagram
 
-# --- Command Handlers ---
+# --- Обработчики команд ---
 
 async def start_handler(client: Client, message: Message):
-    # Check for deep link payload
+    # Проверка на наличие deep link аргумента
     if len(message.command) > 1:
         payload = message.command[1]
 
-        # Audio download by ID (dl_ID)
+        # Скачивание аудио по ID (dl_ID)
         if payload.startswith('dl_'):
             video_id = payload.replace('dl_', '')
             url = f"https://www.youtube.com/watch?v={video_id}"
@@ -27,14 +27,14 @@ async def start_handler(client: Client, message: Message):
             await download_audio(client, message.chat.id, url)
             return
 
-        # Video download by key (vid_KEY)
+        # Скачивание видео по ключу (vid_KEY)
         elif payload.startswith('vid_'):
             key = payload.replace('vid_', '')
             url = get_deep_link(key)
 
             if url:
                 await message.reply_text(get_message("downloads.download_start"))
-                # Detect platform
+                # Определение платформы
                 platform = get_platform(url)
                 if platform == "Instagram":
                     await download_instagram(client, message.chat.id, url)
@@ -44,16 +44,16 @@ async def start_handler(client: Client, message: Message):
                 await message.reply_text(get_message("errors.invalid_link"))
             return
 
-    # Normal start
+    # Обычный старт
     await message.reply_html(
-        get_message("start", bot_username=client.me.username, owner_username=os.getenv("OWNER_USERNAME", "unknown"))
+        get_message("start", bot_username=client.me.username, owner_username=os.getenv("OWNER_USERNAME", "неизвестен"))
     )
 
 async def help_handler(client: Client, message: Message):
     await message.reply_markdown(
         get_message("help",
                     bot_username=client.me.username,
-                    owner_username=os.getenv("OWNER_USERNAME", "unknown"),
+                    owner_username=os.getenv("OWNER_USERNAME", "неизвестен"),
                     max_duration=int(MAX_DURATION/60),
                     max_playlist_items=os.getenv("MAX_PLAYLIST_ITEMS", 10))
     )
@@ -62,7 +62,7 @@ async def text_handler(client: Client, message: Message):
     text = message.text
 
     if not is_valid_url(text):
-        # Treat as search query
+        # Если не ссылка, считаем поисковым запросом
         await search_song_handler(client, message)
         return
 
@@ -77,8 +77,7 @@ async def text_handler(client: Client, message: Message):
     elif platform in ["YouTubePlaylist", "SoundCloudPlaylist"]:
         await handle_playlist(client, message, text, platform.replace("Playlist", ""))
     else:
-        # Fallback to simple audio download if URL provided but unknown platform, or error?
-        # Let's try to download video for generic URLs if supported by yt-dlp
+        # Попытка скачать видео для общих URL
         await download_video(client, message.chat.id, text, await message.reply_text(get_message("downloads.searching", query=text)))
 
 async def search_song_handler(client: Client, message: Message):
@@ -99,9 +98,9 @@ async def search_song_handler(client: Client, message: Message):
              title = title[:47] + "..."
         buttons.append([InlineKeyboardButton(f"🎵 {title}", callback_data=f"download_{video_id}")])
 
-    await loading.edit_text("Select a song:", reply_markup=InlineKeyboardMarkup(buttons))
+    await loading.edit_text("Выберите песню:", reply_markup=InlineKeyboardMarkup(buttons))
 
-# --- Callback & Inline Handlers ---
+# --- Callback и Inline обработчики ---
 
 async def button_callback(client: Client, query: CallbackQuery):
     if query.data.startswith('download_'):
@@ -115,9 +114,9 @@ async def inline_query_handler(client: Client, query: InlineQuery):
     if not text:
         return
 
-    # Check if it is a link
+    # Проверка, является ли текст ссылкой
     if is_valid_url(text):
-        # Generate deep link for video
+        # Генерация deep link для видео
         key = os.urandom(8).hex()
         save_deep_link(key, text)
 
@@ -125,20 +124,20 @@ async def inline_query_handler(client: Client, query: InlineQuery):
 
         results = [
             InlineQueryResultArticle(
-                title="📹 Download Video",
+                title="📹 Скачать видео",
                 description=text,
                 input_message_content=InputTextMessageContent(
-                    message_text=f"📹 Video Link:\n{text}"
+                    message_text=f"📹 Ссылка на видео:\n{text}"
                 ),
                 reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("▶️ Download", url=deep_link_url)
+                    InlineKeyboardButton("▶️ Скачать", url=deep_link_url)
                 ]])
             )
         ]
         await query.answer(results, cache_time=300)
         return
 
-    # Search music
+    # Поиск музыки
     entries = await search_youtube(text)
     results = []
     for entry in entries:
@@ -152,12 +151,12 @@ async def inline_query_handler(client: Client, query: InlineQuery):
         results.append(
             InlineQueryResultArticle(
                 title=title,
-                description=f"Duration: {int(duration//60)}:{int(duration%60):02d}",
+                description=f"Длительность: {int(duration//60)}:{int(duration%60):02d}",
                 input_message_content=InputTextMessageContent(
                     message_text=f"🎵 {title}\n🔗 {youtube_url}"
                 ),
                 reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("▶️ Download", url=deep_link_url)
+                    InlineKeyboardButton("▶️ Скачать", url=deep_link_url)
                 ]])
             )
         )

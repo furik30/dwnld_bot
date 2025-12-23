@@ -13,7 +13,7 @@ class DurationLimitError(Exception):
     pass
 
 async def download_instagram(client: Client, chat_id: int, url: str, status_message: Message = None):
-    """Downloads Instagram Reel/Video."""
+    """Скачивает Instagram Reel/Video."""
     target_profile = None
     try:
         if status_message:
@@ -30,10 +30,9 @@ async def download_instagram(client: Client, chat_id: int, url: str, status_mess
              try:
                  L.load_cookies_from_mozilla(INSTAGRAM_COOKIES_FILE)
              except Exception as e:
-                 logger.warning(f"Failed to load Instagram cookies: {e}")
+                 logger.warning(f"Не удалось загрузить cookies Instagram: {e}")
 
-        # Extract shortcode
-        # url structure: https://www.instagram.com/reels/ShortCode/
+        # Извлечение shortcode
         try:
             shortcode = url.rstrip('/').split('/')[-1]
             if not shortcode: # Handle trailing slash
@@ -42,7 +41,7 @@ async def download_instagram(client: Client, chat_id: int, url: str, status_mess
             shortcode = None
 
         if not shortcode:
-             raise Exception("Could not extract shortcode")
+             raise Exception("Не удалось извлечь shortcode")
 
         post = await run_blocking(instaloader.Post.from_shortcode, L.context, shortcode)
 
@@ -51,15 +50,15 @@ async def download_instagram(client: Client, chat_id: int, url: str, status_mess
 
         target_profile = post.owner_username
 
-        # Download
+        # Скачивание
         await run_blocking(L.download_post, post, target=target_profile)
 
-        # Find the video file
+        # Поиск видеофайла
         download_dir = os.path.join(DOWNLOADS_DIR, target_profile)
         video_files = glob.glob(os.path.join(download_dir, '*.mp4'))
 
         if not video_files:
-             raise Exception("Video file not found")
+             raise Exception("Видеофайл не найден")
 
         video_path = video_files[0]
 
@@ -79,10 +78,10 @@ async def download_instagram(client: Client, chat_id: int, url: str, status_mess
     except DurationLimitError as e:
          if status_message: await status_message.edit_text(str(e))
     except Exception as e:
-        logger.error(f"Instagram download error {url}: {e}", exc_info=True)
+        logger.error(f"Ошибка скачивания Instagram {url}: {e}", exc_info=True)
         if status_message: await status_message.edit_text(get_message("errors.download_failed"))
     finally:
-        # Cleanup
+        # Очистка
         if target_profile:
              dir_path = os.path.join(DOWNLOADS_DIR, target_profile)
              if os.path.exists(dir_path):

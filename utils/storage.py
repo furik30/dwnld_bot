@@ -11,7 +11,7 @@ def _load_links():
         with open(DEEP_LINKS_FILE, 'r') as f:
             return json.load(f)
     except Exception as e:
-        logger.error(f"Error loading deep links: {e}")
+        logger.error(f"Ошибка загрузки deep links: {e}")
         return {}
 
 def _save_links(links):
@@ -19,10 +19,10 @@ def _save_links(links):
         with open(DEEP_LINKS_FILE, 'w') as f:
             json.dump(links, f)
     except Exception as e:
-        logger.error(f"Error saving deep links: {e}")
+        logger.error(f"Ошибка сохранения deep links: {e}")
 
 def save_deep_link(key: str, url: str):
-    """Saves a deep link key and URL to persistent storage."""
+    """Сохраняет ключ и URL deep link в постоянное хранилище."""
     links = _load_links()
     links[key] = {
         "url": url,
@@ -31,11 +31,11 @@ def save_deep_link(key: str, url: str):
     _save_links(links)
 
 def get_deep_link(key: str) -> str:
-    """Retrieves and removes a URL by its deep link key."""
+    """Получает и удаляет URL по ключу deep link."""
     links = _load_links()
     data = links.pop(key, None)
 
-    # Optional: cleanup old links here if needed
+    # Опционально: очистка старых ссылок здесь, если нужно
     # ...
 
     _save_links(links)

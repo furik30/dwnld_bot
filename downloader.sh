@@ -1,56 +1,56 @@
 #!/bin/bash
 
-# Color codes
+# Цветовые коды
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m' # Без цвета
 
-# Check if docker is installed
+# Проверка установки Docker
 if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Docker is not installed. Please install Docker first.${NC}"
+    echo -e "${RED}Docker не установлен. Пожалуйста, установите Docker.${NC}"
     exit 1
 fi
 
-# Function to show usage
+# Функция вывода справки
 usage() {
-    echo "Usage: $0 {up|down|restart|logs|status|update|edit-env|login}"
-    echo "  up        : Start the bot (detached mode)"
-    echo "  down      : Stop the bot"
-    echo "  restart   : Restart the bot"
-    echo "  logs [n]  : Show logs (optional: n lines)"
-    echo "  status    : Show container status"
-    echo "  update    : Pull latest changes and restart"
-    echo "  edit-env  : Edit .env file"
-    echo "  login     : Run a script to generate session (if needed)"
+    echo "Использование: $0 {up|down|restart|logs|status|update|edit-env|login}"
+    echo "  up        : Запустить бота (в фоновом режиме)"
+    echo "  down      : Остановить бота"
+    echo "  restart   : Перезагрузить бота"
+    echo "  logs [n]  : Показать логи (опционально: n строк)"
+    echo "  status    : Показать статус контейнера"
+    echo "  update    : Скачать обновления и перезапустить"
+    echo "  edit-env  : Редактировать файл .env"
+    echo "  login     : Настройка входа (проверка токена)"
 }
 
-# Ensure .env exists
+# Проверка наличия .env
 if [ ! -f .env ]; then
     if [ -f .env.example ]; then
-        echo -e "${YELLOW}.env not found. Copying from .env.example...${NC}"
+        echo -e "${YELLOW}.env не найден. Копирую из .env.example...${NC}"
         cp .env.example .env
-        echo -e "${YELLOW}Please edit .env with your credentials.${NC}"
+        echo -e "${YELLOW}Пожалуйста, отредактируйте .env и укажите ваши данные.${NC}"
     else
-        echo -e "${RED}.env and .env.example not found!${NC}"
+        echo -e "${RED}.env и .env.example не найдены!${NC}"
     fi
 fi
 
-# Export UID/GID for docker-compose to fix permission issues
+# Экспорт UID/GID для docker-compose (исправление прав доступа)
 export UID=$(id -u)
 export GID=$(id -g)
 
 case "$1" in
     up)
-        echo -e "${GREEN}Starting bot...${NC}"
+        echo -e "${GREEN}Запуск бота...${NC}"
         docker compose up -d --build
         ;;
     down)
-        echo -e "${YELLOW}Stopping bot...${NC}"
+        echo -e "${YELLOW}Остановка бота...${NC}"
         docker compose down
         ;;
     restart)
-        echo -e "${YELLOW}Restarting bot...${NC}"
+        echo -e "${YELLOW}Перезагрузка бота...${NC}"
         docker compose restart
         ;;
     logs)
@@ -61,7 +61,7 @@ case "$1" in
         docker compose ps
         ;;
     update)
-        echo -e "${GREEN}Updating bot...${NC}"
+        echo -e "${GREEN}Обновление бота...${NC}"
         git pull
         docker compose up -d --build
         ;;
@@ -69,9 +69,7 @@ case "$1" in
         ${EDITOR:-nano} .env
         ;;
     login)
-        # Assuming login logic is just ensuring .env is set or running a specialized script
-        # Since we use Bot Token, 'login' is mostly about config.
-        echo -e "${GREEN}To login, ensure TELEGRAM_TOKEN is set in .env${NC}"
+        echo -e "${GREEN}Для входа убедитесь, что TELEGRAM_TOKEN указан в .env${NC}"
         ${EDITOR:-nano} .env
         ;;
     *)

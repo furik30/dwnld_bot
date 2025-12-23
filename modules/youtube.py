@@ -13,7 +13,7 @@ class DurationLimitError(Exception):
     pass
 
 async def search_youtube(query: str, limit: int = 5):
-    """Searches YouTube for videos."""
+    """Ищет видео на YouTube."""
     ydl_opts = {
         'quiet': True,
         'extract_flat': True,
@@ -27,11 +27,11 @@ async def search_youtube(query: str, limit: int = 5):
             result = await run_blocking(ydl.extract_info, f"ytsearch{limit}:{query}", download=False)
             return result.get('entries', [])
     except Exception as e:
-        logger.error(f"Error searching YouTube: {e}", exc_info=True)
+        logger.error(f"Ошибка поиска на YouTube: {e}", exc_info=True)
         return []
 
 async def download_audio(client: Client, chat_id: int, url: str, status_message: Message = None):
-    """Downloads audio from YouTube URL and sends it."""
+    """Скачивает аудио с YouTube и отправляет его."""
     try:
         if status_message:
             await status_message.edit_text(get_message("downloads.downloading_track"))
@@ -47,7 +47,7 @@ async def download_audio(client: Client, chat_id: int, url: str, status_message:
         filename = None
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = await run_blocking(ydl.extract_info, url, download=False)
-            # Handle cases where info might be a playlist or single video
+            # Обработка случаев, когда info может быть плейлистом или одиночным видео
             entry = info.get('entries', [info])[0]
 
             duration = int(entry.get('duration', 0))
@@ -55,20 +55,13 @@ async def download_audio(client: Client, chat_id: int, url: str, status_message:
                 raise DurationLimitError(get_message("errors.duration_limit", duration=duration, max_duration=MAX_DURATION))
 
             await run_blocking(ydl.download, [url])
-            # Prepare filename logic: yt-dlp might replace characters
-            # Ideally we rely on prepare_filename but since we convert to mp3, extension changes.
-            # A safer bet is searching for the file recently created or using 'restrictfilenames': True to predict name.
-            # But let's try prepare_filename first and swap extension.
 
             temp_filename = ydl.prepare_filename(entry)
             base_name = temp_filename.rsplit('.', 1)[0]
             filename = f"{base_name}.mp3"
 
-            # Double check if file exists, sometimes titles have weird chars
+            # Проверка существования файла
             if not os.path.exists(filename):
-                # Fallback: look for latest mp3 in downloads
-                # This is risky in high concurrency.
-                # Better approach: Use a unique ID in filename.
                 pass
 
         if filename and os.path.exists(filename):
@@ -86,24 +79,24 @@ async def download_audio(client: Client, chat_id: int, url: str, status_message:
             if status_message:
                 await status_message.delete()
         else:
-             raise Exception("File not found after download")
+             raise Exception("Файл не найден после скачивания")
 
     except DurationLimitError as e:
         if status_message: await status_message.edit_text(str(e))
     except Exception as e:
-        logger.error(f"Error downloading audio {url}: {e}", exc_info=True)
+        logger.error(f"Ошибка скачивания аудио {url}: {e}", exc_info=True)
         if status_message: await status_message.edit_text(get_message("errors.download_failed"))
     finally:
         if filename and os.path.exists(filename):
             os.remove(filename)
 
 async def download_video(client: Client, chat_id: int, url: str, status_message: Message = None):
-    """Downloads video from supported sites and sends it."""
+    """Скачивает видео с поддерживаемых сайтов и отправляет его."""
     try:
         if status_message:
             await status_message.edit_text(get_message("downloads.downloading_video"))
 
-        # Use id in filename to avoid char issues
+        # Используем id в имени файла, чтобы избежать проблем с символами
         ydl_opts = {
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'outtmpl': os.path.join(DOWNLOADS_DIR, '%(id)s.%(ext)s'),
@@ -137,12 +130,12 @@ async def download_video(client: Client, chat_id: int, url: str, status_message:
             if status_message:
                 await status_message.delete()
         else:
-             raise Exception("File not found after download")
+             raise Exception("Файл не найден после скачивания")
 
     except DurationLimitError as e:
          if status_message: await status_message.edit_text(str(e))
     except Exception as e:
-        logger.error(f"Error downloading video {url}: {e}", exc_info=True)
+        logger.error(f"Ошибка скачивания видео {url}: {e}", exc_info=True)
         if status_message: await status_message.edit_text(get_message("errors.download_failed"))
     finally:
         if filename and os.path.exists(filename):
@@ -169,7 +162,7 @@ async def handle_playlist(client: Client, message: Message, url: str, platform: 
 
         await status_msg.edit_text(get_message("downloads.playlist_found", count=len(entries)))
 
-        # Download items sequentially
+        # Скачиваем элементы последовательно
         for i, entry in enumerate(entries):
             video_url = entry.get('url')
             if platform == "YouTube":
@@ -180,16 +173,11 @@ async def handle_playlist(client: Client, message: Message, url: str, platform: 
                 get_message("downloads.playlist_track", current=i+1, total=len(entries), title=title)
             )
 
-            # Re-use download_audio logic but we need to catch errors to not stop playlist
             try:
-                # We need to manually duplicate the download_audio logic or call it
-                # Since download_audio handles its own messaging and error catching,
-                # we might need to be careful.
-                # Let's call download_audio but wrap it.
                 await download_audio(client, message.chat.id, video_url, track_msg)
             except Exception as e:
-                logger.error(f"Playlist track error: {e}")
+                logger.error(f"Ошибка трека из плейлиста: {e}")
 
     except Exception as e:
-        logger.error(f"Error processing playlist {url}: {e}", exc_info=True)
+        logger.error(f"Ошибка обработки плейлиста {url}: {e}", exc_info=True)
         await status_msg.edit_text(get_message("errors.generic"))

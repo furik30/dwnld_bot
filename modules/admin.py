@@ -7,13 +7,12 @@ from utils.messages import get_message
 
 async def admin_command(client: Client, message: Message):
     if message.from_user.id != OWNER_ID:
-        # Silently ignore or say access denied? User asked for "Check if user.id == OWNER_ID"
         return
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📜 Logs", callback_data="admin_logs"),
-         InlineKeyboardButton("📊 Status", callback_data="admin_status")],
-        [InlineKeyboardButton("❌ Errors", callback_data="admin_errors")]
+        [InlineKeyboardButton("📜 Логи", callback_data="admin_logs"),
+         InlineKeyboardButton("📊 Статус", callback_data="admin_status")],
+        [InlineKeyboardButton("❌ Ошибки", callback_data="admin_errors")]
     ])
 
     await message.reply_text(get_message("admin.panel"), reply_markup=keyboard)
@@ -41,35 +40,34 @@ async def send_logs(query: CallbackQuery, error_only: bool):
     lines = []
     try:
         with open(log_file, 'r', encoding='utf-8') as f:
-            # Read all lines
+            # Читаем все строки
             all_lines = f.readlines()
 
-            # Filter if needed (naive implementation since logs are JSON)
-            # If error_only, we check if line contains "ERROR" or "CRITICAL"
-            for line in reversed(all_lines): # Read from end
+            # Фильтруем (теперь логи - это просто текст)
+            for line in reversed(all_lines): # Читаем с конца
                 if len(lines) >= 20:
                     break
                 if error_only:
-                     if '"level": "ERROR"' in line or '"level": "CRITICAL"' in line:
+                     if 'ERROR' in line or 'CRITICAL' in line:
                          lines.append(line)
                 else:
                     lines.append(line)
     except Exception as e:
-        await query.message.edit_text(f"Error reading logs: {e}")
+        await query.message.edit_text(f"Ошибка чтения логов: {e}")
         return
 
     if not lines:
         await query.answer(get_message("admin.logs_empty"), show_alert=True)
         return
 
-    # Reverse back to normal order
+    # Возвращаем порядок (сверху - старые, снизу - новые, или наоборот? Обычно логи читают сверху вниз)
+    # Но мы читали с конца. Так что reversed(lines) вернет хронологический порядок последних N строк.
     text = get_message("admin.logs_header") + "".join(reversed(lines))
 
-    # Telegram message limit is 4096 chars. Truncate if needed.
+    # Лимит сообщения Telegram 4096 символов.
     if len(text) > 4000:
         text = text[-4000:]
 
-    # Escape HTML/Markdown if necessary or send as monospaced
     await query.message.edit_text(f"```\n{text}\n```", parse_mode=None)
 
 async def send_status(query: CallbackQuery):

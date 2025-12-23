@@ -1,82 +1,82 @@
 # Telegram Downloader Bot
 
-A powerful Telegram bot to download music and videos from YouTube, Instagram (Reels), TikTok, and SoundCloud.
-Refactored for speed (Pyrogram), modularity, and ease of deployment (Docker).
+Мощный Telegram-бот для скачивания музыки и видео с YouTube, Instagram (Reels), TikTok и SoundCloud.
+Рефакторинг с использованием Pyrogram (для скорости), модульной структуры и Docker.
 
-## Features
+## Возможности
 
-- 🎵 **Music**: Search and download from YouTube (MP3).
-- 📹 **Video**: Download from YouTube, TikTok, Instagram Reels.
-- 📦 **Playlists**: Support for YouTube and SoundCloud playlists.
-- 🚀 **Fast**: Built on Pyrogram (MTProto).
-- 🐳 **Dockerized**: Easy to deploy with Docker Compose.
-- 🛠 **CLI**: `downloader.sh` for easy management.
-- 🍪 **Cookies**: Support for Instagram and YouTube cookies to bypass restrictions.
-- 🔐 **Admin Panel**: View logs and status directly in Telegram.
-- 🔗 **Deep Links**: Shareable links for videos.
+- 🎵 **Музыка**: Поиск и скачивание с YouTube (MP3).
+- 📹 **Видео**: Скачивание с YouTube, TikTok, Instagram Reels.
+- 📦 **Плейлисты**: Поддержка плейлистов YouTube и SoundCloud.
+- 🚀 **Быстрый**: Построен на Pyrogram (MTProto).
+- 🐳 **Docker**: Легкое развертывание через Docker Compose.
+- 🛠 **CLI**: Скрипт `downloader.sh` для управления.
+- 🍪 **Cookies**: Поддержка cookies для Instagram и YouTube (обход ограничений).
+- 🔐 **Админ-панель**: Просмотр логов и статуса прямо в Telegram.
+- 🔗 **Deep Links**: Ссылки для быстрого скачивания видео.
 
-## Prerequisites
+## Требования
 
-- Docker & Docker Compose
-- Telegram Bot Token (@BotFather)
-- Telegram API ID & Hash (https://my.telegram.org)
+- Docker и Docker Compose
+- Токен Telegram бота (@BotFather)
+- Telegram API ID и Hash (https://my.telegram.org)
 
-## Installation
+## Установка
 
-1.  **Clone the repository:**
+1.  **Клонирование репозитория:**
     ```bash
     git clone https://github.com/yourusername/dwnld_bot.git
     cd dwnld_bot
     ```
 
-2.  **Configuration:**
-    -   Copy `.env.example` to `.env` (or let the script do it).
-    -   Edit `.env` and fill in your credentials.
+2.  **Настройка:**
+    -   Скопируйте `.env.example` в `.env` (или скрипт сделает это за вас).
+    -   Отредактируйте `.env`, указав ваши данные.
     ```bash
     ./downloader.sh edit-env
     ```
 
-3.  **Cookies (Optional but Recommended):**
-    -   **Instagram**: Export cookies in Netscape format (using extensions like "Get cookies.txt LOCALLY") and save as `instagram_cookies.txt` in the root folder.
-    -   **YouTube**: Similarly, save `youtube_cookies.txt` in the root folder to bypass age restrictions.
+3.  **Cookies (Опционально, но рекомендуется):**
+    -   **Instagram**: Экспортируйте cookies в формате Netscape (используя расширения типа "Get cookies.txt LOCALLY") и сохраните как `instagram_cookies.txt` в корневой папке.
+    -   **YouTube**: Аналогично сохраните `youtube_cookies.txt` в корневой папке для обхода возрастных ограничений.
 
-4.  **Run the bot:**
+4.  **Запуск бота:**
     ```bash
     ./downloader.sh up
     ```
 
-## Usage
+## Использование
 
-- **/start**: Start the bot.
-- **Search**: Send any text to search for a song.
-- **Links**: Send a link from supported platforms (YouTube, Instagram, TikTok, SoundCloud) to download.
-- **Inline**: Type `@YourBotUsername query` in any chat.
+- **/start**: Запустить бота.
+- **Поиск**: Отправьте любой текст для поиска песни.
+- **Ссылки**: Отправьте ссылку с поддерживаемой платформы (YouTube, Instagram, TikTok, SoundCloud).
+- **Inline**: Напишите `@UsernameБота запрос` в любом чате.
 
-### Admin Commands
+### Команды администратора
 
-- **/admin** or **/logs**: Open the admin panel (only for `OWNER_ID`).
-    -   **Logs**: View last 20 log lines.
-    -   **Status**: View system memory usage and active threads.
-    -   **Errors**: View only error logs.
+- **/admin** или **/logs**: Открыть админ-панель (только для `OWNER_ID`).
+    -   **Логи**: Показать последние 20 строк логов.
+    -   **Статус**: Показать использование памяти и активные потоки.
+    -   **Ошибки**: Показать только логи с ошибками.
 
-## CLI Commands (`./downloader.sh`)
+## CLI Команды (`./downloader.sh`)
 
-- `up`: Start bot in background.
-- `down`: Stop bot.
-- `logs [n]`: View logs (tail).
-- `restart`: Restart bot.
-- `update`: Pull git changes and rebuild.
-- `status`: Check container status.
+- `up`: Запустить бота в фоновом режиме.
+- `down`: Остановить бота.
+- `logs [n]`: Просмотр логов (по умолчанию 100 строк).
+- `restart`: Перезагрузить бота.
+- `update`: Получить обновления из git и пересобрать.
+- `status`: Проверить статус контейнера.
 
-## Project Structure
+## Структура проекта
 
-- `main.py`: Entry point.
-- `modules/`: Bot handlers (youtube, instagram, admin).
-- `utils/`: Helper functions (logger, storage, messages).
-- `config/`: Configuration files (messages.yml).
-- `data/`: Persistent data (deep links, session files).
-- `downloads/`: Temporary download folder.
+- `main.py`: Точка входа.
+- `modules/`: Обработчики бота (youtube, instagram, admin).
+- `utils/`: Вспомогательные функции (logger, storage, messages).
+- `config/`: Конфигурационные файлы (messages.yml).
+- `data/`: Постоянные данные (deep links, сессии).
+- `downloads/`: Папка для временных загрузок.
 
-## License
+## Лицензия
 
 MIT
