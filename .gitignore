@@ -13,6 +13,9 @@ venv/
 # Downloads
 downloads/
 
+#Coockies
+cookies/
+
 # Logs and data
 archive/
 data/

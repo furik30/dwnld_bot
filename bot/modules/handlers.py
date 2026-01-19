@@ -11,6 +11,7 @@ from utils.storage import save_deep_link, get_deep_link
 from utils.messages import get_message
 from modules.youtube import search_youtube, download_audio, download_video, handle_playlist
 from modules.instagram import download_instagram
+from modules.tiktok import download_tiktok
 
 # --- Обработчики команд ---
 
@@ -38,6 +39,8 @@ async def start_handler(client: Client, message: Message):
                 platform = get_platform(url)
                 if platform == "Instagram":
                     await download_instagram(client, message.chat.id, url)
+                elif platform == "TikTok":
+                    await download_tiktok(client, message.chat.id, url)
                 else:
                     await download_video(client, message.chat.id, url)
             else:
@@ -67,18 +70,25 @@ async def text_handler(client: Client, message: Message):
         return
 
     platform = get_platform(text)
+    status_msg = await message.reply_text(get_message("downloads.searching", query=text))
 
     if platform == "Instagram":
-        await download_instagram(client, message.chat.id, text, await message.reply_text(get_message("downloads.searching", query=text)))
-    elif platform in ["YouTube", "TikTok"]:
-        await download_video(client, message.chat.id, text, await message.reply_text(get_message("downloads.searching", query=text)))
+        await download_instagram(client, message.chat.id, text, status_msg)
+    elif platform == "TikTok":
+        # Используем новый отдельный модуль для TikTok
+        await download_tiktok(client, message.chat.id, text, status_msg)
+    elif platform == "YouTube":
+        await download_video(client, message.chat.id, text, status_msg)
     elif platform == "SoundCloud":
-        await download_audio(client, message.chat.id, text, await message.reply_text(get_message("downloads.searching", query=text)))
+        await download_audio(client, message.chat.id, text, status_msg)
     elif platform in ["YouTubePlaylist", "SoundCloudPlaylist"]:
+        # Для плейлистов статус сообщение передаем внутрь handle_playlist, если логика позволяет,
+        # но в оригинале handle_playlist сам создает сообщение. Удалим наше.
+        await status_msg.delete() 
         await handle_playlist(client, message, text, platform.replace("Playlist", ""))
     else:
-        # Попытка скачать видео для общих URL
-        await download_video(client, message.chat.id, text, await message.reply_text(get_message("downloads.searching", query=text)))
+        # Попытка скачать видео для общих URL (Facebook, Twitter и т.д.)
+        await download_video(client, message.chat.id, text, status_msg)
 
 async def search_song_handler(client: Client, message: Message):
     query = message.text

@@ -12,4 +12,5 @@ services:
       - ./config:/app/config
       - ./instagram_cookies.txt:/app/instagram_cookies.txt
       - ./youtube_cookies.txt:/app/youtube_cookies.txt
+      - ./tiktok_cookies.txt:/app/tiktok_cookies.txt
     user: "${USER_ID}:${GROUP_ID}"

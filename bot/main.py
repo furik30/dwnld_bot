@@ -11,6 +11,8 @@ from modules.handlers import (
 from modules.admin import admin_command, admin_callback
 
 def main():
+    logger.info("🚀 Запуск бота...")
+    
     if not TELEGRAM_TOKEN:
         logger.error("TELEGRAM_TOKEN не установлен.")
         return
@@ -39,7 +41,8 @@ def main():
     app.add_handler(CallbackQueryHandler(button_callback, filters.regex("^download_")))
     app.add_handler(InlineQueryHandler(inline_query_handler))
 
-    logger.info("Запуск бота...")
+    # Лог успешного запуска
+    logger.info("✅ Бот запущен!")
     app.run()
 
 if __name__ == "__main__":

@@ -13,15 +13,14 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p downloads logs data
+RUN mkdir -p downloads logs data cookies
 
 # Command to run the bot
-CMD ["python", "main.py"]
+CMD ["/bin/bash", "-c", "pip install --upgrade --no-cache-dir yt-dlp && python main.py"]

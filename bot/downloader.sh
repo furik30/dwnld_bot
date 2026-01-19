@@ -21,18 +21,21 @@ export GROUP_ID=$(id -g)
 
 # Функция проверки и исправления файлов cookies
 ensure_cookie_files() {
-    # Список файлов, которые должны быть файлами, а не папками
-    local files=("youtube_cookies.txt" "instagram_cookies.txt")
+    local cookie_dir="cookies"
     
-    for file in "${files[@]}"; do
-        if [ -d "$file" ]; then
-            echo -e "${YELLOW}⚠️  Обнаружена ошибка: '$file' является папкой. Исправляем...${NC}"
-            rm -rf "$file"
-            touch "$file"
-            echo -e "${GREEN}   -> Папка удалена, создан пустой файл '$file'.${NC}"
-        elif [ ! -f "$file" ]; then
-            echo -e "${YELLOW}ℹ️  Файл '$file' не найден. Создаю пустой...${NC}"
-            touch "$file"
+    local files=("youtube_cookies.txt" "instagram_cookies.txt" "tiktok_cookies.txt")
+    
+    for file_name in "${files[@]}"; do
+        local file_path="$cookie_dir/$file_name"
+        
+        if [ -d "$file_path" ]; then
+            echo -e "${YELLOW}⚠️  Обнаружена ошибка: '$file_path' является папкой. Исправляем...${NC}"
+            rm -rf "$file_path"
+            touch "$file_path"
+            echo -e "${GREEN}   -> Папка удалена, создан пустой файл '$file_path'.${NC}"
+        elif [ ! -f "$file_path" ]; then
+            echo -e "${YELLOW}ℹ️  Файл '$file_path' не найден. Создаю пустой...${NC}"
+            touch "$file_path"
         fi
     done
 }
@@ -130,7 +133,6 @@ case "$1" in
         setup_env
         ;;
     up)
-        # Порядок важен: сначала проверяем .env, потом чиним файлы, потом запускаем Docker
         check_env
         ensure_cookie_files
         docker compose up -d --build

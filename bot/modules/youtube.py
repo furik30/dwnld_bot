@@ -2,7 +2,7 @@ import os
 import yt_dlp
 from pyrogram import Client
 from pyrogram.types import Message
-from config import DOWNLOADS_DIR, COOKIES_FILE, MAX_DURATION, MAX_PLAYLIST_ITEMS
+from config import DOWNLOADS_DIR, YOUTUBE_COOKIES_FILE, MAX_DURATION, MAX_PLAYLIST_ITEMS
 from utils.common import run_blocking
 from utils.logger import logger
 from utils.messages import get_message
@@ -17,7 +17,7 @@ async def search_youtube(query: str, limit: int = 5):
         'extract_flat': True,
         'force_generic_extractor': True,
         'age_limit': 99,
-        'cookiefile': COOKIES_FILE if os.path.exists(COOKIES_FILE) else None
+        'cookiefile': YOUTUBE_COOKIES_FILE if os.path.exists(YOUTUBE_COOKIES_FILE) else None
     }
 
     try:
@@ -39,7 +39,7 @@ async def download_audio(client: Client, chat_id: int, url: str, status_message:
             'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
             'outtmpl': os.path.join(DOWNLOADS_DIR, '%(title)s.%(ext)s'),
             'noplaylist': True, 'quiet': True, 'age_limit': 99,
-            'cookiefile': COOKIES_FILE if os.path.exists(COOKIES_FILE) else None
+            'cookiefile': YOUTUBE_COOKIES_FILE if os.path.exists(YOUTUBE_COOKIES_FILE) else None
         }
 
         filename = None
@@ -99,7 +99,7 @@ async def download_video(client: Client, chat_id: int, url: str, status_message:
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'outtmpl': os.path.join(DOWNLOADS_DIR, '%(id)s.%(ext)s'),
             'noplaylist': True, 'quiet': True, 'age_limit': 99,
-            'cookiefile': COOKIES_FILE if os.path.exists(COOKIES_FILE) else None
+            'cookiefile': YOUTUBE_COOKIES_FILE if os.path.exists(YOUTUBE_COOKIES_FILE) else None
         }
 
         filename = None
@@ -147,7 +147,7 @@ async def handle_playlist(client: Client, message: Message, url: str, platform: 
             'extract_flat': True,
             'playlistend': MAX_PLAYLIST_ITEMS,
             'age_limit': 99,
-            'cookiefile': COOKIES_FILE if os.path.exists(COOKIES_FILE) else None
+            'cookiefile': YOUTUBE_COOKIES_FILE if os.path.exists(YOUTUBE_COOKIES_FILE) else None
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
