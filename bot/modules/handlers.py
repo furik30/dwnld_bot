@@ -6,7 +6,7 @@ from pyrogram.types import (
     InlineKeyboardMarkup, InlineKeyboardButton
 )
 from config import MAX_DURATION
-from utils.common import get_platform, is_valid_url
+from utils.common import get_platform, is_valid_url, normalize_url
 from utils.storage import save_deep_link, get_deep_link
 from utils.messages import get_message
 from modules.youtube import search_youtube, download_audio, download_video, handle_playlist
@@ -34,6 +34,7 @@ async def start_handler(client: Client, message: Message):
             url = get_deep_link(key)
 
             if url:
+                url = normalize_url(url) # Нормализуем ссылку из кэша
                 await message.reply_text(get_message("downloads.download_start"))
                 # Определение платформы
                 platform = get_platform(url)
@@ -62,38 +63,40 @@ async def help_handler(client: Client, message: Message):
     )
 
 async def text_handler(client: Client, message: Message):
-    text = message.text
-
-    if not is_valid_url(text):
-        # Если не ссылка, считаем поисковым запросом
+    original_text = message.text.strip()
+    
+    # 1. Сначала пытаемся нормализовать ссылку
+    url = normalize_url(original_text)
+    
+    # 2. Проверяем, является ли это ссылкой ПОСЛЕ нормализации
+    if not is_valid_url(url):
+        # Если даже с https это не похоже на ссылку, значит это поиск песни
         await search_song_handler(client, message)
         return
 
-    platform = get_platform(text)
-    status_msg = await message.reply_text(get_message("downloads.searching", query=text))
+    # 3. Работаем дальше с нормализованной ссылкой
+    platform = get_platform(url)
+    status_msg = await message.reply_text(get_message("downloads.searching", query=url))
 
     if platform == "Instagram":
-        await download_instagram(client, message.chat.id, text, status_msg)
+        await download_instagram(client, message.chat.id, url, status_msg)
     elif platform == "TikTok":
-        # Используем новый отдельный модуль для TikTok
-        await download_tiktok(client, message.chat.id, text, status_msg)
+        await download_tiktok(client, message.chat.id, url, status_msg)
     elif platform == "YouTube":
-        await download_video(client, message.chat.id, text, status_msg)
+        await download_video(client, message.chat.id, url, status_msg)
     elif platform == "SoundCloud":
-        await download_audio(client, message.chat.id, text, status_msg)
+        await download_audio(client, message.chat.id, url, status_msg)
     elif platform in ["YouTubePlaylist", "SoundCloudPlaylist"]:
         # Для плейлистов статус сообщение передаем внутрь handle_playlist, если логика позволяет,
         # но в оригинале handle_playlist сам создает сообщение. Удалим наше.
         await status_msg.delete() 
-        await handle_playlist(client, message, text, platform.replace("Playlist", ""))
+        await handle_playlist(client, message, url, platform.replace("Playlist", ""))
     else:
-        # Попытка скачать видео для общих URL (Facebook, Twitter и т.д.)
-        await download_video(client, message.chat.id, text, status_msg)
+        await download_video(client, message.chat.id, url, status_msg)
 
 async def search_song_handler(client: Client, message: Message):
     query = message.text
     loading = await message.reply_text(get_message("downloads.searching", query=query))
-
     entries = await search_youtube(query)
 
     if not entries:
@@ -124,20 +127,20 @@ async def inline_query_handler(client: Client, query: InlineQuery):
     if not text:
         return
 
-    # Проверка, является ли текст ссылкой
-    if is_valid_url(text):
-        # Генерация deep link для видео
+    # Инлайн режим тоже должен поддерживать нормализацию
+    normalized_url = normalize_url(text)
+    if is_valid_url(normalized_url):
         key = os.urandom(8).hex()
-        save_deep_link(key, text)
+        save_deep_link(key, normalized_url)
 
         deep_link_url = f"https://t.me/{client.me.username}?start=vid_{key}"
 
         results = [
             InlineQueryResultArticle(
                 title="📹 Скачать видео",
-                description=text,
+                description=normalized_url,
                 input_message_content=InputTextMessageContent(
-                    message_text=f"📹 Ссылка на видео:\n{text}"
+                    message_text=f"📹 Ссылка на видео:\n{normalized_url}"
                 ),
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("▶️ Скачать", url=deep_link_url)
@@ -170,5 +173,4 @@ async def inline_query_handler(client: Client, query: InlineQuery):
                 ]])
             )
         )
-
     await query.answer(results, cache_time=300)
