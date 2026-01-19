@@ -1,7 +1,6 @@
 import os
-import glob
-import shutil
-import instaloader
+import yt_dlp
+from yt_dlp.utils import YoutubeDLError
 from pyrogram import Client
 from pyrogram.types import Message
 from config import DOWNLOADS_DIR, INSTAGRAM_COOKIES_FILE, MAX_DURATION
@@ -13,76 +12,85 @@ class DurationLimitError(Exception):
     pass
 
 async def download_instagram(client: Client, chat_id: int, url: str, status_message: Message = None):
-    """Скачивает Instagram Reel/Video."""
-    target_profile = None
+    """
+    Скачивание видео/Reels с Instagram через yt-dlp.
+    Использует cookies из файла для обхода блокировок и авторизации.
+    """
+    filename = None
     try:
         if status_message:
             await status_message.edit_text(get_message("downloads.downloading_video"))
 
-        L = instaloader.Instaloader(
-            download_pictures=False, download_video_thumbnails=False, download_geotags=False,
-            download_comments=False, save_metadata=False, compress_json=False,
-            dirname_pattern=os.path.join(DOWNLOADS_DIR, '{profile}'),
-            sleep=True, request_timeout=30, max_connection_attempts=3
-        )
+        # Настройки yt-dlp
+        ydl_opts = {
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'outtmpl': os.path.join(DOWNLOADS_DIR, 'insta_%(id)s.%(ext)s'),
+            'noplaylist': True,
+            'quiet': True,
+            'age_limit': 99,
+            # Подключаем куки. Если файл есть, yt-dlp использует авторизацию
+            'cookiefile': INSTAGRAM_COOKIES_FILE if os.path.exists(INSTAGRAM_COOKIES_FILE) else None,
+            # Притворяемся браузером Chrome
+            'impersonate': 'chrome',
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            }
+        }
 
-        if os.path.exists(INSTAGRAM_COOKIES_FILE):
-             try:
-                 L.load_cookies_from_mozilla(INSTAGRAM_COOKIES_FILE)
-             except Exception as e:
-                 logger.warning(f"Не удалось загрузить cookies Instagram: {e}")
-
-        # Извлечение shortcode
+        # Пытаемся инициализировать с impersonate (требует curl_cffi)
+        # Если не выходит (например, при локальном тесте без либы) — переключаемся на стандартный режим
         try:
-            shortcode = url.rstrip('/').split('/')[-1]
-            if not shortcode: # Handle trailing slash
-                 shortcode = url.rstrip('/').split('/')[-2]
-        except:
-            shortcode = None
+            ydl_instance = yt_dlp.YoutubeDL(ydl_opts)
+        except YoutubeDLError as e:
+            if "Impersonate target" in str(e):
+                logger.warning(f"Impersonation failed (missing curl_cffi?): {e}. Switching to standard mode.")
+                if 'impersonate' in ydl_opts:
+                    del ydl_opts['impersonate']
+                ydl_instance = yt_dlp.YoutubeDL(ydl_opts)
+            else:
+                raise e
 
-        if not shortcode:
-             raise Exception("Не удалось извлечь shortcode")
+        with ydl_instance as ydl:
+            # Получаем информацию о видео
+            info = await run_blocking(ydl.extract_info, url, download=False)
+            
+            # Проверяем длительность
+            duration = int(info.get('duration', 0))
+            if duration > MAX_DURATION:
+                 raise DurationLimitError(get_message("errors.duration_limit", duration=duration, max_duration=MAX_DURATION))
 
-        post = await run_blocking(instaloader.Post.from_shortcode, L.context, shortcode)
+            # Скачиваем
+            await run_blocking(ydl.download, [url])
+            filename = ydl.prepare_filename(info)
 
-        if post.video_duration > MAX_DURATION:
-             raise DurationLimitError(get_message("errors.duration_limit", duration=int(post.video_duration), max_duration=MAX_DURATION))
+        if filename and os.path.exists(filename):
+            if status_message:
+                await status_message.edit_text(get_message("downloads.sending_file"))
 
-        target_profile = post.owner_username
+            # Отправляем видео
+            await client.send_video(
+                chat_id=chat_id,
+                video=filename,
+                caption=get_message("downloads.caption", bot_username=client.me.username),
+                duration=duration,
+                width=info.get('width'),
+                height=info.get('height')
+            )
+            if status_message:
+                await status_message.delete()
+        else:
+             raise Exception("Файл не найден после скачивания")
 
-        # Скачивание
-        await run_blocking(L.download_post, post, target=target_profile)
-
-        # Поиск видеофайла
-        download_dir = os.path.join(DOWNLOADS_DIR, target_profile)
-        video_files = glob.glob(os.path.join(download_dir, '*.mp4'))
-
-        if not video_files:
-             raise Exception("Видеофайл не найден")
-
-        video_path = video_files[0]
-
-        if status_message:
-             await status_message.edit_text(get_message("downloads.sending_file"))
-
-        await client.send_video(
-             chat_id=chat_id,
-             video=video_path,
-             caption=get_message("downloads.caption", bot_username=client.me.username)
-        )
-        if status_message:
-             await status_message.delete()
-
-    except instaloader.exceptions.ConnectionException:
-         if status_message: await status_message.edit_text(get_message("errors.instagram_limit"))
     except DurationLimitError as e:
          if status_message: await status_message.edit_text(str(e))
     except Exception as e:
         logger.error(f"Ошибка скачивания Instagram {url}: {e}", exc_info=True)
-        if status_message: await status_message.edit_text(get_message("errors.download_failed"))
+        if status_message: 
+            await status_message.edit_text(get_message("errors.download_failed"))
     finally:
-        # Очистка
-        if target_profile:
-             dir_path = os.path.join(DOWNLOADS_DIR, target_profile)
-             if os.path.exists(dir_path):
-                  shutil.rmtree(dir_path)
+        # Удаляем файл
+        if filename and os.path.exists(filename):
+            try:
+                os.remove(filename)
+            except OSError:
+                pass
