@@ -121,7 +121,7 @@ usage() {
     echo "  down      - Остановить"
     echo "  restart   - Перезагрузить"
     echo "  logs      - Просмотр логов (-f)"
-    echo "  update    - Обновить код из ветки dev"
+    echo "  update    - Обновить код из ветки main"
     echo "  edit      - Вручную редактировать .env"
     echo "  uninstall - Полное удаление проекта"
 }

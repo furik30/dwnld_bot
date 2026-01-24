@@ -6,7 +6,7 @@
 # Определяем текущую директорию
 INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_URL="https://github.com/furik30/dwnld_bot.git"
-BRANCH="dev"
+BRANCH="main"
 
 # Цвета
 GREEN='\033[0;32m'
