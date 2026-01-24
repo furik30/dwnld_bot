@@ -1,5 +1,6 @@
 import os
 import yt_dlp
+from yt_dlp.utils import DownloadError
 from pyrogram import Client
 from pyrogram.types import Message
 from config import DOWNLOADS_DIR, TIKTOK_COOKIES_FILE, MAX_DURATION
@@ -13,35 +14,38 @@ class DurationLimitError(Exception):
 async def download_tiktok(client: Client, chat_id: int, url: str, status_message: Message = None):
     """
     Специализированный модуль для скачивания видео с TikTok.
-    Использует специфичные заголовки и отдельный файл cookies.
+    Использует client-impersonation для обхода защиты (требует curl-cffi).
     """
     filename = None
     try:
         if status_message:
             await status_message.edit_text(get_message("downloads.downloading_video"))
 
-        # Специфичные заголовки для TikTok, чтобы избежать 403 Forbidden
-        http_headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': 'https://www.tiktok.com/',
-            'Accept-Language': 'en-US,en;q=0.9',
-        }
-
-        # Опции yt-dlp специально для TikTok
+        # Опции yt-dlp. 
+        # Мы убрали ручные http_headers, так как 'impersonate' генерирует их автоматически.
         ydl_opts = {
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-            'impersonate': 'chrome',
             'outtmpl': os.path.join(DOWNLOADS_DIR, 'tiktok_%(id)s.%(ext)s'),
             'noplaylist': True,
             'quiet': True,
+            'no_warnings': True,
             'age_limit': 99,
-            'http_headers': http_headers,
+            
+            # Cookies могут помочь, но иногда конфликтуют с impersonate. 
+            # Если будут ошибки, попробуйте временно отключить cookiefile.
             'cookiefile': TIKTOK_COOKIES_FILE if os.path.exists(TIKTOK_COOKIES_FILE) else None
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Получаем информацию без скачивания для проверки длительности
-            info = await run_blocking(ydl.extract_info, url, download=False)
+            # Получаем информацию
+            try:
+                info = await run_blocking(ydl.extract_info, url, download=False)
+            except DownloadError as e:
+                # Если ошибка связана с блокировкой, пробуем еще раз без cookies или логируем
+                if "Unable to extract" in str(e) or "403" in str(e):
+                    logger.warning(f"TikTok вернул ошибку при получении инфо. Проверьте 'yt-dlp -U' или cookie файл. Ошибка: {e}")
+                raise e
+
             duration = int(info.get('duration', 0))
 
             if duration > MAX_DURATION:
@@ -71,9 +75,17 @@ async def download_tiktok(client: Client, chat_id: int, url: str, status_message
 
     except DurationLimitError as e:
          if status_message: await status_message.edit_text(str(e))
+    
+    except DownloadError as e:
+        logger.error(f"Ошибка yt-dlp при скачивании TikTok {url}: {e}")
+        # Часто TikTok выдает ошибку, если версия yt-dlp устарела
+        if status_message: 
+            await status_message.edit_text("Ошибка скачивания. Возможно, TikTok обновил защиту. Попробуйте обновить бота.")
+            
     except Exception as e:
-        logger.error(f"Ошибка скачивания TikTok {url}: {e}", exc_info=True)
+        logger.error(f"Общая ошибка скачивания TikTok {url}: {e}", exc_info=True)
         if status_message: await status_message.edit_text(get_message("errors.download_failed"))
+        
     finally:
         # Удаляем файл после отправки
         if filename and os.path.exists(filename):

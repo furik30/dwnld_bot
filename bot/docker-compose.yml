@@ -10,7 +10,5 @@ services:
       - ./logs:/app/logs
       - ./data:/app/data
       - ./config:/app/config
-      - ./cookies/instagram_cookies.txt:/app/cookies/instagram_cookies.txt
-      - ./cookies/youtube_cookies.txt:/app/cookies/youtube_cookies.txt
-      - ./cookies/tiktok_cookies.txt:/app/cookies/tiktok_cookies.txt
+      - ./cookies:/app/cookies
     user: "${USER_ID}:${GROUP_ID}"
