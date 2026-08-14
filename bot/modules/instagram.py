@@ -28,27 +28,17 @@ async def download_instagram(client: Client, chat_id: int, url: str, status_mess
             'noplaylist': True,
             'quiet': True,
             'age_limit': 99,
-            # Подключаем куки. Если файл есть, yt-dlp использует авторизацию
             'cookiefile': INSTAGRAM_COOKIES_FILE if os.path.exists(INSTAGRAM_COOKIES_FILE) else None,
-            # Притворяемся браузером Chrome
-            'impersonate': 'chrome',
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            }
         }
 
         # Пытаемся инициализировать с impersonate (требует curl_cffi)
         # Если не выходит (например, при локальном тесте без либы) — переключаемся на стандартный режим
         try:
             ydl_instance = yt_dlp.YoutubeDL(ydl_opts)
-        except YoutubeDLError as e:
-            if "Impersonate target" in str(e):
-                logger.warning(f"Impersonation failed (missing curl_cffi?): {e}. Switching to standard mode.")
-                if 'impersonate' in ydl_opts:
-                    del ydl_opts['impersonate']
-                ydl_instance = yt_dlp.YoutubeDL(ydl_opts)
-            else:
-                raise e
+        except (YoutubeDLError, AssertionError, Exception) as e:
+            # Мы ловим AssertionError и любые другие ошибки инициализации
+            ydl_opts.pop('http_headers', None) 
+            ydl_instance = yt_dlp.YoutubeDL(ydl_opts)
 
         with ydl_instance as ydl:
             # Получаем информацию о видео
@@ -85,7 +75,7 @@ async def download_instagram(client: Client, chat_id: int, url: str, status_mess
          if status_message: await status_message.edit_text(str(e))
     except Exception as e:
         logger.error(f"Ошибка скачивания Instagram {url}: {e}", exc_info=True)
-        if status_message: 
+        if status_message:
             await status_message.edit_text(get_message("errors.download_failed"))
     finally:
         # Удаляем файл

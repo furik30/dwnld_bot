@@ -28,7 +28,7 @@ INSTAGRAM_COOKIES_FILE = os.path.join(COOKIES_DIR, 'instagram_cookies.txt')
 YOUTUBE_COOKIES_FILE = os.path.join(COOKIES_DIR, 'youtube_cookies.txt')
 
 # --- TIKTOK ---
-TIKTOK_COOKIES_FILE = os.getenv(COOKIES_DIR, "tiktok_cookies.txt")
+TIKTOK_COOKIES_FILE = os.path.join(COOKIES_DIR, "tiktok_cookies.txt")
 
 # --- ОГРАНИЧЕНИЯ ---
 MAX_DURATION = int(os.getenv("MAX_DURATION", 1200))  # 20 минут по умолчанию

@@ -47,6 +47,7 @@ downloads:
   playlist_found: "✅ Найден плейлист из {count} треков. Начинаю загрузку..."
   downloading_track: "🚀 Скачиваю трек..."
   downloading_video: "🚀 Скачиваю видео..."
+  downloading_photo: "🖼️ Скачиваю фото-пост..."
   sending_file: "📤 Отправляю файл..."
   download_start: "✅ Выбрано. Начинаю загрузку..."
   playlist_track: "Скачиваю трек {current}/{total}: {title}"

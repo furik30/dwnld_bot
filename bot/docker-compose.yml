@@ -11,4 +11,9 @@ services:
       - ./data:/app/data
       - ./config:/app/config
       - ./cookies:/app/cookies
-    user: "${USER_ID}:${GROUP_ID}"
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

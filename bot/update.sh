@@ -53,7 +53,7 @@ else
         --exclude='data/' \
         --exclude='downloads/' \
         --exclude='session/' \
-        --exclude='instagram_cookies.txt' \
+        --exclude='cookies/' \
         "$TEMP_DIR/bot/" "$INSTALL_DIR/"
 fi
 
