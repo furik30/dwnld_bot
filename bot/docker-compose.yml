@@ -6,11 +6,11 @@ services:
     env_file:
       - .env
     volumes:
-      - ./downloads:/app/downloads
-      - ./logs:/app/logs
-      - ./data:/app/data
-      - ./config:/app/config
-      - ./cookies:/app/cookies
+      - ./downloads:/app/downloads:z
+      - ./logs:/app/logs:z
+      - ./data:/app/data:z
+      - ./config:/app/config:z
+      - ./cookies:/app/cookies:z
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     logging:
       driver: json-file
