@@ -20,7 +20,7 @@ curl -sSL https://raw.githubusercontent.com/furik30/dwnld_bot/dev/install.sh | b
 - **Bot Token**: получите у [@BotFather](https://t.me/BotFather).
 ## 🍪 Cookies (Опционально)
 Для обхода ограничений YouTube (18+) и скачивания из Instagram:
-1. Положите файлы `youtube_cookies.txt`, `instagram_cookies.txt` и `tiktok_cookies.txt` в формате Netscape в папку /downloader/bot/cookies/.
+1. Положите файлы `youtube_cookies.txt`, `instagram_cookies.txt` и `tiktok_cookies.txt` в формате Netscape (см. [инструкцию](docs/README_Cookies.md)) в папку /downloader/bot/cookies/.
 2. Выполните `downloader restart`.
 
 Разработано для удобного деплоя на VPS.
